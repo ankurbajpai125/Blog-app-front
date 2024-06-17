@@ -5,18 +5,37 @@ import { UserContext } from "../UserContext";
 
 export default function PostPage() {
   const [postInfo, setPostInfo] = useState(null);
+  const [error, setError] = useState(null);
   const { userInfo } = useContext(UserContext);
   const { id } = useParams();
 
   useEffect(() => {
-    fetch(`https://blog-app-back-dsyd.onrender.com/post/${id}`)
-      .then(response => response.json())
-      .then(postInfo => {
+    const fetchPost = async () => {
+      try {
+        const response = await fetch(`https://blog-app-back-dsyd.onrender.com/post/${id}`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch post data.');
+        }
+
+        const postInfo = await response.json();
         setPostInfo(postInfo);
-      });
+      } catch (error) {
+        console.error("Error fetching post:", error);
+        setError("Failed to fetch post data. Please try again later.");
+      }
+    };
+
+    fetchPost();
   }, [id]);
 
-  if (!postInfo) return null;
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  if (!postInfo) {
+    return <div>Loading...</div>;
+  }
 
   const isAuthor = userInfo && userInfo.id === postInfo.author._id;
 
